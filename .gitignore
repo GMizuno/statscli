@@ -286,3 +286,5 @@ poetry.toml
 *.parquet
 
 .DS_Store
+
+*.csv

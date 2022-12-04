@@ -1,1 +1,1 @@
-from .list_files import stats_files
+from .files import stats_files

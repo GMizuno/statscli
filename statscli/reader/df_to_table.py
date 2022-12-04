@@ -1,10 +1,4 @@
-from datetime import datetime
-from typing import Optional
-from rich import box
-from rich.console import Console
 from rich.table import Table
-
-console = Console()
 
 
 def df_to_table(
