@@ -7,7 +7,7 @@ from typing import List
 
 from statscli.converter import CSV, Parquet
 from statscli.describer import stats_files
-from statscli.reader import df_to_table
+from statscli.describer import df_to_table
 
 main = typer.Typer(name="StatsCli CLI")
 
@@ -35,7 +35,7 @@ def list_files(path: str = typer.Option(..., help="Path to the file")):
 
 
 @main.command()
-def head(path: str, num_row: int = 5, columns: List[str] = None, sep: str = ','):
+def head(path: str, num_row: int = 5, columns = None, sep: str = ','):
     """Print first num_row lines"""
     p = Path(path)
     if p.suffix == '.parquet':

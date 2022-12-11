@@ -12,8 +12,8 @@ class Readers(ABC):
         self.column = column
         self.n_rows = n_rows
         self.filepath = filepath
-        
+
 
     @abstractmethod
-    def read(self) -> pl.DataFrame:
+    def read(self) ->  pl.DataFrame:
         pass

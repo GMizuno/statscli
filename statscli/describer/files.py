@@ -1,4 +1,3 @@
-from typing import TYPE_CHECKING
 from rich.table import Table
 
 def stats_files(files: list, table: Table) -> None:
