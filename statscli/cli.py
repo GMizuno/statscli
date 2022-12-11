@@ -3,10 +3,9 @@ from rich.console import Console
 from rich.table import Table
 import polars as pl
 from pathlib import Path
-from typing import List
 
 from statscli.converter import CSV, Parquet
-from statscli.describer import stats_files
+from statscli.describer import stats_files, print_schemas
 from statscli.describer import df_to_table
 
 main = typer.Typer(name="StatsCli CLI")
@@ -87,3 +86,22 @@ def to_csv(path: str = typer.Option(..., help="Path to the file"),
             file.to_csv(new_filename=new_filename, sep=sep)
     else:
         raise ValueError(f'Extension {p.suffix} does not supported')
+
+@main.command()
+def schema(path: str, sep: str = ',') :
+    p = Path(path)
+    if p.suffix == '.parquet':
+        data = Parquet(path, n_rows=None, columns=None)
+    elif p.suffix == '.csv':
+        data = CSV(path, n_rows=None, columns=None, sep=sep)
+    else:
+        raise ValueError(f'Extension {p.suffix} does not supported')
+
+    table = Table(title=f"Schema of {p.name}")
+
+    table.add_column("Column", justify="left", style="cyan", no_wrap=True)
+    table.add_column("Type", style="magenta")
+
+    print_schemas(data.schema(), table)
+    console = Console()
+    console.print(table)

@@ -17,3 +17,6 @@ class Readers(ABC):
     @abstractmethod
     def read(self) ->  pl.DataFrame:
         pass
+
+    def schema(self):
+        return self.read().schema
