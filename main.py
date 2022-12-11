@@ -1,4 +1,11 @@
-from statscli.converter import Parquet
+import typer
 
-file = Parquet('tests/KwhConsumptionBlower78_1.parquet', n_rows=5, columns=None)
-file.schema()
+app = typer.Typer(name="StatsCli CLI")
+
+def hello_world():
+    print(hello_world)
+
+app.registered_commands.append(hello_world)
+
+if __name__ == "__main__":
+    app()

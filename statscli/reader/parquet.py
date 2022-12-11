@@ -9,10 +9,10 @@ class ParquetReader(Readers):
 
     def __init__(self,
                  filepath: str,
-                 n_rows: int = 5,
+                 n_rows: int | None = 5,
                  columns: list[str] | None = None,
                  ):
         super().__init__(filepath, n_rows, columns)
 
     def read(self) -> pl.DataFrame:
-        return pl.read_parquet(self.filepath, columns=None, n_rows=self.n_rows)
+        return pl.read_parquet(self.filepath, columns=None, n_rows=self.n_rows, index=False)

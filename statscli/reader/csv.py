@@ -9,7 +9,7 @@ class CSVReader(Readers):
 
     def __init__(self,
                  filepath: str,
-                 n_rows: int = 5,
+                 n_rows: int | None = 5,
                  column: list[str] | None = None,
                  sep: str = ','):
         super().__init__(filepath)

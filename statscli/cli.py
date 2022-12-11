@@ -88,7 +88,13 @@ def to_csv(path: str = typer.Option(..., help="Path to the file"),
         raise ValueError(f'Extension {p.suffix} does not supported')
 
 @main.command()
-def schema(path: str, sep: str = ',') :
+def schema(path: str = typer.Option(..., help="Path to the file"),
+           sep: str = typer.Option(',', help="Separator to be used")) :
+    """Print Schema information
+
+    :param path: Path to the file
+    :param sep: Separato if necessary
+    """
     p = Path(path)
     if p.suffix == '.parquet':
         data = Parquet(path, n_rows=None, columns=None)
@@ -105,3 +111,27 @@ def schema(path: str, sep: str = ',') :
     print_schemas(data.schema(), table)
     console = Console()
     console.print(table)
+
+
+@main.command()
+def describer(path: str = typer.Option(..., help="Path to the file"),
+              sep: str = typer.Option(',', help="Separator to be used")):
+    """Print Schema information
+
+    :param path: Path to the file
+    :param sep: Separato if necessary
+    """
+    p = Path(path)
+    if p.suffix == '.parquet':
+        data = Parquet(path, n_rows=None, columns=None).read()
+    elif p.suffix == '.csv':
+        data = CSV(path, n_rows=None, columns=None, sep=sep).read()
+    else:
+        raise ValueError(f'Extension {p.suffix} does not supported')
+
+    stats = data.describe()
+
+    console = Console()
+    table = Table(show_header=True, header_style="bold magenta")
+
+    console.print(df_to_table(stats, table))
