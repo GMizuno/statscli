@@ -17,5 +17,4 @@ class ParquetReader(Readers):
         super().__init__(filepath, n_rows, columns, sep)
 
     def read(self) -> pl.DataFrame:
-        print(self.columns)
         return pl.read_parquet(self.filepath, columns=self.columns, n_rows=self.n_rows)
