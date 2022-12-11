@@ -1,5 +1,6 @@
-from .reader import Readers
 import polars as pl
+
+from .reader import Readers
 
 
 class CSVReader(Readers):
@@ -10,13 +11,9 @@ class CSVReader(Readers):
     def __init__(self,
                  filepath: str,
                  n_rows: int | None = 5,
-                 column: list[str] | None = None,
+                 columns: list[str] | None = None,
                  sep: str = ','):
-        super().__init__(filepath)
-        self.sep = sep
-        self.n_rows = n_rows
-        self.column = column
-
+        super().__init__(filepath, n_rows, columns, sep)
 
     def read(self) -> pl.DataFrame:
-        return pl.read_csv(self.filepath, n_rows=self.n_rows, columns=self.column, sep=self.sep)
+        return pl.read_csv(self.filepath, n_rows=self.n_rows, columns=self.columns, sep=self.sep)

@@ -1,12 +1,14 @@
+from pathlib import Path
+
+import polars as pl
 import typer
 from rich.console import Console
 from rich.table import Table
-import polars as pl
-from pathlib import Path
 
-from statscli.converter import CSV, Parquet
-from statscli.describer import stats_files, print_schemas
+from statscli.converter import ParquetConvert, CSVConvert, AvroConvert
 from statscli.describer import df_to_table
+from statscli.describer import stats_files, print_schemas
+from statscli.reader import AvroReader, ParquetReader, CSVReader
 
 main = typer.Typer(name="StatsCli CLI")
 
@@ -34,17 +36,22 @@ def list_files(path: str = typer.Option(..., help="Path to the file")):
 
 
 @main.command()
-def head(path: str, num_row: int = 5, columns = None, sep: str = ','):
+def head(path: str = typer.Option(..., help="Path to the file"),
+         num_row: int = typer.Option(5, help="Stop reading from file after reading n_rows"),
+         columns: list[str] = typer.Option(None, help="List of columns to be read"),
+         sep: str = typer.Option(',', help="Separator to be used, if necessary")):
     """Print first num_row lines"""
     p = Path(path)
+    if columns == []: columns = None
     if p.suffix == '.parquet':
-        data = Parquet(path, n_rows=num_row, columns=columns)
+        data = ParquetReader(path, n_rows=num_row, columns=columns)
     elif p.suffix == '.csv':
-        data = CSV(path, n_rows=num_row, columns=columns, sep=sep)
+        data = CSVReader(path, n_rows=num_row, columns=columns, sep=sep)
     else:
         raise ValueError(f'Extension {p.suffix} does not supported')
-    
+
     data = data.read()
+    print(data)
 
     console = Console()
     table = Table(show_header=True, header_style="bold magenta")
@@ -56,16 +63,16 @@ def head(path: str, num_row: int = 5, columns = None, sep: str = ','):
 def to_parquet(path: str = typer.Option(..., help="Path to the file"),
                new_filename: str = typer.Option(None, help="Path where the file should be written"),
                columns: list[str] = typer.Option(None, help="List of columns to be read"),
-               sep: str = typer.Option(',', help="Separator to be used")):
-    """Convert a file to ParquetReader format"""
+               sep: str = typer.Option(',', help="Separator to be used, if necessary")):
+    """Convert a file to Parquet format"""
     p = Path(path)
+    if columns == []: columns = None
     if p.suffix == '.csv':
-        file = CSV(str(path), columns=columns, sep=sep)
-        if new_filename is not None:
-            file.to_parquet(str(path), new_filename=new_filename, columns=columns)
-        else:
-            new_filename = str(p.with_suffix(".parquet"))
-            file.to_parquet(str(path), new_filename=new_filename, columns=columns)
+        reader = CSVReader(str(path), n_rows=None, columns=columns, sep=sep)
+        ParquetConvert(reader).convert(new_filename)
+    elif p.suffix == '.avro':
+        reader = AvroReader(str(path), n_rows=None, columns=columns, sep=None)
+        ParquetConvert(reader).convert(new_filename)
     else:
         raise ValueError(f'Extension {p.suffix} does not supported')
 
@@ -74,22 +81,39 @@ def to_parquet(path: str = typer.Option(..., help="Path to the file"),
 def to_csv(path: str = typer.Option(..., help="Path to the file"),
            new_filename: str = typer.Option(None, help="Path where the file should be written"),
            columns: list[str] = typer.Option(None, help="List of columns to be read"),
-           sep: str = typer.Option(',', help="Separator to be used")):
-    """Convert a file to ParquetReader format"""
+           sep: str = typer.Option(',', help="Separator to be used, if necessary")):
+    """Convert a file to CSV format"""
     p = Path(path)
+    if columns == []: columns = None
     if p.suffix == '.parquet':
-        file = Parquet(str(path), columns=columns)
-        if new_filename is not None:
-            file.to_csv(new_filename=new_filename, sep=sep)
-        else:
-            new_filename = str(p.with_suffix(".csv"))
-            file.to_csv(new_filename=new_filename, sep=sep)
+        reader = ParquetReader(str(path), columns=columns)
+        CSVConvert(reader).convert(new_filename, sep=sep)
+    elif p.suffix == '.avro':
+        reader = AvroReader(str(path))
+        CSVConvert(reader).convert(new_filename, sep=sep)
+    else:
+        raise ValueError(f'Extension {p.suffix} does not supported')
+
+@main.command()
+def to_avro(path: str = typer.Option(..., help="Path to the file"),
+           new_filename: str = typer.Option(None, help="Path where the file should be written"),
+           columns: list[str] = typer.Option(None, help="List of columns to be read"),
+           sep: str = typer.Option(',', help="Separator to be used, if necessary")):
+    """Convert a file to CSV format"""
+    p = Path(path)
+    if columns == []: columns = None
+    if p.suffix == '.parquet':
+        reader = ParquetReader(str(path), columns=columns)
+        AvroConvert(reader).convert(new_filename)
+    elif p.suffix == '.csv':
+        reader = CSVReader(str(path), n_rows=None, columns=columns, sep=sep)
+        AvroConvert(reader).convert(new_filename)
     else:
         raise ValueError(f'Extension {p.suffix} does not supported')
 
 @main.command()
 def schema(path: str = typer.Option(..., help="Path to the file"),
-           sep: str = typer.Option(',', help="Separator to be used")) :
+           sep: str = typer.Option(',', help="Separator to be used, if necessary")):
     """Print Schema information
 
     :param path: Path to the file
@@ -97,9 +121,9 @@ def schema(path: str = typer.Option(..., help="Path to the file"),
     """
     p = Path(path)
     if p.suffix == '.parquet':
-        data = Parquet(path, n_rows=None, columns=None)
+        data = ParquetReader(path, n_rows=None, columns=None)
     elif p.suffix == '.csv':
-        data = CSV(path, n_rows=None, columns=None, sep=sep)
+        data = CSVReader(path, n_rows=None, columns=None, sep=sep)
     else:
         raise ValueError(f'Extension {p.suffix} does not supported')
 
@@ -115,7 +139,7 @@ def schema(path: str = typer.Option(..., help="Path to the file"),
 
 @main.command()
 def describer(path: str = typer.Option(..., help="Path to the file"),
-              sep: str = typer.Option(',', help="Separator to be used")):
+              sep: str = typer.Option(',', help="Separator to be used, if necessary")):
     """Print Schema information
 
     :param path: Path to the file
@@ -123,9 +147,9 @@ def describer(path: str = typer.Option(..., help="Path to the file"),
     """
     p = Path(path)
     if p.suffix == '.parquet':
-        data = Parquet(path, n_rows=None, columns=None).read()
+        data = ParquetReader(path, n_rows=None, columns=None).read()
     elif p.suffix == '.csv':
-        data = CSV(path, n_rows=None, columns=None, sep=sep).read()
+        data = CSVReader(path, n_rows=None, columns=None, sep=sep).read()
     else:
         raise ValueError(f'Extension {p.suffix} does not supported')
 

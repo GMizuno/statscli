@@ -1,4 +1,3 @@
-from statscli.converter.csv import CSV
-from statscli.converter.parquet import Parquet
+from .converter import Convert, ParquetConvert, CSVConvert, AvroConvert
 
-__all__ = ["CSV", "Parquet"]
+__all__ = ["Convert", "ParquetConvert", "CSVConvert", "AvroConvert"]

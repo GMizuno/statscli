@@ -1,5 +1,6 @@
-from .parquet import ParquetReader
-from .avro import Avro
+from .avro import AvroReader
 from .csv import CSVReader
+from .parquet import ParquetReader
+from .reader import Readers
 
-__all__ = ["Avro", "ParquetReader", "CSVReader"]
+__all__ = ["AvroReader", "ParquetReader", "CSVReader", "Readers"]

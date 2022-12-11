@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+
 import polars as pl
 
 
@@ -7,12 +8,13 @@ class Readers(ABC):
     def __init__(self,
                  filepath: str,
                  n_rows: int = 5,
-                 column: list[str] | None = None
+                 columns: list[str] | None = None,
+                 sep: str | None = ','
                  ) -> None:
-        self.column = column
-        self.n_rows = n_rows
         self.filepath = filepath
-
+        self.n_rows = n_rows
+        self.columns = columns
+        self.sep = sep
 
     @abstractmethod
     def read(self) ->  pl.DataFrame:
